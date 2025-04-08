@@ -1,10 +1,16 @@
-Collecting workspace information# MidPay API Documentation
+# MidPay API Documentation
 
 ## Base URL
 `http://localhost:5000/api`
 
 ## Authentication
-This API currently does not require authentication.
+All API endpoints require an API key to be included in the request header:
+
+```
+X-API-Key: your-api-key-here
+```
+
+To get an API key, use the `generate_api_key.py` script. The key will be stored in `validkeys.json`.
 
 ## Endpoints
 
@@ -174,6 +180,7 @@ When an error occurs, the API will respond with an appropriate HTTP status code 
 Common error status codes:
 - `400 Bad Request`: Invalid parameters or request body
 - `404 Not Found`: Resource not found
+- `401 Unauthorized`: Invalid or missing API key
 
 ## Implementation Notes
 
