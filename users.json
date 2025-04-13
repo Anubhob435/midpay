@@ -1,0 +1,18 @@
+{
+  "users": [
+    {
+      "username": "userA",
+      "password": "passwordA",
+      "role": "A",
+      "email": "userA@example.com",
+      "name": "User A"
+    },
+    {
+      "username": "userB",
+      "password": "passwordB",
+      "role": "B",
+      "email": "userB@example.com",
+      "name": "User B"
+    }
+  ]
+}
