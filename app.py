@@ -4,6 +4,7 @@ import secrets
 import json
 import os
 import hashlib  # For password hashing in the future
+from generate_api_key import generate_api_key, save_api_key  # Import API key generation functions
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
@@ -313,6 +314,31 @@ def verify_blockchain():
 def api_docs():
     """Render the API documentation page"""
     return render_template('api_documentation.html',
+                          username=session.get('username', ''),
+                          name=session.get('name', ''),
+                          user_role=session.get('user_role', ''))
+
+@app.route('/get-api-key')
+def get_api_key():
+    """Generate and return an API key for the logged-in user"""
+    # Check if user is logged in
+    if 'username' not in session:
+        flash('Please login to get an API key', 'error')
+        return redirect(url_for('login_page'))
+    
+    # Get user information from the session
+    name = session.get('name')
+    email = session.get('email')
+    
+    # Generate API key using the imported function
+    api_key = generate_api_key(name, email)
+    
+    # Save the generated API key
+    save_api_key(email, api_key)
+    
+    # Return the key to the user
+    return render_template('api_key.html',
+                          api_key=api_key,
                           username=session.get('username', ''),
                           name=session.get('name', ''),
                           user_role=session.get('user_role', ''))

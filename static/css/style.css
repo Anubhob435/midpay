@@ -411,6 +411,148 @@ header {
     margin-top: 40px;
 }
 
+/* Transaction Flow Animation */
+.transaction-animation-container {
+    margin-top: 40px;
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.animation-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.animation-step-indicator {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 14px;
+}
+
+.animation-stage {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 30px 0;
+    position: relative;
+    min-height: 150px;
+}
+
+.actor {
+    text-align: center;
+    padding: 15px;
+    background-color: var(--light-gray);
+    border-radius: 10px;
+    width: 120px;
+    position: relative;
+    z-index: 2;
+}
+
+.actor-icon {
+    font-size: 24px;
+    margin-bottom: 10px;
+    color: var(--primary-color);
+}
+
+.actor-label {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.actor-money {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--success-color);
+}
+
+.party-a .actor-icon {
+    color: var(--primary-color);
+}
+
+.escrow .actor-icon {
+    color: var(--secondary-color);
+}
+
+.party-b .actor-icon {
+    color: var(--accent-color);
+}
+
+.transaction-arrow {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    position: relative;
+    height: 10px;
+}
+
+.arrow-body {
+    height: 4px;
+    background-color: #ddd;
+    flex-grow: 1;
+    position: relative;
+}
+
+.arrow-head {
+    width: 0;
+    height: 0;
+    border-top: 10px solid transparent;
+    border-bottom: 10px solid transparent;
+    border-left: 15px solid #ddd;
+    margin-left: -1px;
+}
+
+.transfer-amount {
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--warning-color);
+    color: white;
+    padding: 3px 10px;
+    border-radius: 15px;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.5s;
+}
+
+.animation-description {
+    background-color: var(--light-gray);
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    margin: 20px 0;
+    position: relative;
+}
+
+/* Animation states */
+.animate-transfer .arrow-body {
+    background-color: var(--warning-color);
+    animation: flow 1.5s forwards;
+}
+
+.animate-transfer .arrow-head {
+    border-left-color: var(--warning-color);
+}
+
+.animate-transfer .transfer-amount {
+    opacity: 1;
+}
+
+@keyframes flow {
+    0% {
+        flex-grow: 0;
+    }
+    100% {
+        flex-grow: 1;
+    }
+}
+
 /* Contact Section */
 .contact-content {
     display: grid;
