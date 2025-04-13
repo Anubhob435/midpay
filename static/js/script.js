@@ -54,8 +54,8 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             
             // Get form values
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
+            const name = document.getElementById('contact_name').value;
+            const email = document.getElementById('contact_email').value;
             const message = document.getElementById('message').value;
             
             // Simple validation

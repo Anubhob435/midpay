@@ -7,6 +7,20 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        body {
+            padding-top: 0;
+            margin-top: 0;
+        }
+        
+        main {
+            padding-top: 80px; /* Add padding to account for the fixed header */
+            min-height: calc(100vh - 250px); /* Ensure enough content space */
+        }
+        
+        .flash-container {
+            margin-top: 20px;
+        }
+        
         .api-key-container {
             background-color: #f8f9fa;
             border-radius: 8px;

@@ -318,14 +318,22 @@
                             </p>
                             
                             <div class="api-key-section">
-                                <h3>API Key Example</h3>
+                                <h3>API Key</h3>
+                                <p>
+                                    To authenticate your requests, include your API key in the <code>X-API-Key</code> header.
+                                </p>
                                 <div class="code-block">
                                     <pre>X-API-Key: your-api-key-here</pre>
                                 </div>
+                                {% if username %}
+                                <div style="margin-top: 20px;">
+                                    <a href="{{ url_for('get_api_key') }}" class="btn btn-primary">Generate Your API Key</a>
+                                </div>
+                                {% else %}
                                 <p>
-                                    To generate an API key, run the <code>generate_api_key.py</code> script. 
-                                    The key will be stored in <code>validkeys.json</code>.
+                                    Please <a href="{{ url_for('login_page') }}">log in</a> to generate an API key.
                                 </p>
+                                {% endif %}
                             </div>
                         </div>
                         
