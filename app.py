@@ -343,5 +343,62 @@ def get_api_key():
                           name=session.get('name', ''),
                           user_role=session.get('user_role', ''))
 
+@app.route('/profile')
+def profile():
+    """Render user profile page with all user-related data"""
+    # Check if user is logged in
+    if 'username' not in session:
+        flash('Please login to view your profile', 'info')
+        return redirect(url_for('login_page'))
+    
+    # Load user data
+    user_data = load_users()
+    current_user = next((u for u in user_data['users'] if u['username'] == session['username']), None)
+    
+    if not current_user:
+        flash('User data not found', 'error')
+        return redirect(url_for('dashboard'))
+    
+    # Get user transactions
+    user_transactions = []
+    for tx_id in midpay.transactions:
+        tx_info = midpay.get_transaction_status(tx_id)
+        if tx_info["status"] == "success":
+            tx_data = tx_info["transaction"]
+            tx_data["id"] = tx_id  # Add transaction ID to the data
+            user_transactions.append(tx_data)
+    
+    # Get user balance based on role
+    user_role = session.get('user_role')
+    balance = midpay.get_balance(user_role)
+    
+    # Get transaction statistics
+    transaction_stats = {
+        "total": len(user_transactions),
+        "pending": sum(1 for tx in user_transactions if tx["status"] == "pending"),
+        "completed": sum(1 for tx in user_transactions if tx["status"] == "completed"),
+        "released": sum(1 for tx in user_transactions if tx["status"] == "released"),
+        "cancelled": sum(1 for tx in user_transactions if tx["status"] == "cancelled"),
+    }
+    
+    # Check if user has API key
+    has_api_key = False
+    try:
+        with open('validkeys.json', 'r') as file:
+            valid_keys = json.load(file)
+            has_api_key = session.get('email', '') in valid_keys.values()
+    except (FileNotFoundError, json.JSONDecodeError):
+        pass
+    
+    return render_template('profile.html', 
+                           user=current_user,
+                           balance=balance,
+                           transactions=user_transactions,
+                           transaction_stats=transaction_stats,
+                           has_api_key=has_api_key,
+                           username=session.get('username', ''),
+                           name=session.get('name', ''),
+                           user_role=session.get('user_role', ''))
+
 if __name__ == '__main__':
     app.run(debug=True, port=8000)  # Using port 8000 to avoid conflict with the API

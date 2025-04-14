@@ -19,7 +19,7 @@
                 <li><a href="{{ url_for('api_docs') }}">API</a></li>
                 <li><a href="#contact">Contact</a></li>
                 {% if username %}
-                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('profile') }}">Profile</a></li>
                 <li class="user-info">
                     <span><i class="fas fa-user"></i> {{ name }} ({{ user_role }})</span>
                     <a href="{{ url_for('logout') }}" class="btn btn-sm">Logout</a>
@@ -52,7 +52,7 @@
                 {% if not username %}
                 <a href="{{ url_for('login_page') }}" class="btn btn-primary" id="get-started-btn">Get Started</a>
                 {% else %}
-                <a href="{{ url_for('dashboard') }}" class="btn btn-primary" id="get-started-btn">Go to Dashboard</a>
+                <a href="{{ url_for('profile') }}" class="btn btn-primary" id="get-started-btn">View Profile</a>
                 {% endif %}
             </div>
             <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.4); z-index: 1;"></div>
