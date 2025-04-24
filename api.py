@@ -3,6 +3,7 @@ from flask_cors import CORS
 from midpay import MidPay
 import json
 from functools import wraps
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 CORS(app)  # Enable cross-origin requests
@@ -94,6 +95,119 @@ def get_transaction(transaction_id):
 @require_api_key
 def verify_blockchain():
     result = midpay.verify_blockchain()
+    return jsonify(result)
+
+# New API endpoints for enhanced features
+
+@app.route('/api/transactions/history', methods=['GET'])
+@require_api_key
+def get_transaction_history():
+    user = request.args.get('user')
+    status = request.args.get('status')
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    
+    result = midpay.get_transaction_history(user, status, start_date, end_date)
+    return jsonify(result)
+
+@app.route('/api/transactions/batch', methods=['POST'])
+@require_api_key
+def create_batch_transaction():
+    data = request.json
+    
+    if not data or 'transactions' not in data:
+        return jsonify({"status": "failed", "message": "Missing transactions array"}), 400
+    
+    results = []
+    for tx in data['transactions']:
+        if 'amount' in tx and 'description' in tx:
+            result = midpay.create_transaction(float(tx['amount']), tx['description'])
+            results.append(result)
+    
+    return jsonify({"status": "success", "results": results})
+
+@app.route('/api/users', methods=['POST'])
+@require_api_key
+def create_user():
+    data = request.json
+    if not data or 'user_id' not in data or 'initial_balance' not in data:
+        return jsonify({"status": "failed", "message": "Missing required fields"}), 400
+    
+    result = midpay.create_user(data['user_id'], float(data['initial_balance']))
+    return jsonify(result)
+
+@app.route('/api/users/<user_id>', methods=['GET'])
+@require_api_key
+def get_user(user_id):
+    result = midpay.get_user_details(user_id)
+    return jsonify(result)
+
+@app.route('/api/transactions/<transaction_id>/dispute', methods=['POST'])
+@require_api_key
+def create_dispute(transaction_id):
+    data = request.json
+    if not data or 'reason' not in data:
+        return jsonify({"status": "failed", "message": "Missing reason for dispute"}), 400
+    
+    result = midpay.create_dispute(transaction_id, data['reason'])
+    return jsonify(result)
+
+@app.route('/api/disputes/<dispute_id>/resolve', methods=['PUT'])
+@require_api_key
+def resolve_dispute(dispute_id):
+    data = request.json
+    if not data or 'resolution' not in data:
+        return jsonify({"status": "failed", "message": "Missing resolution decision"}), 400
+    
+    result = midpay.resolve_dispute(dispute_id, data['resolution'])
+    return jsonify(result)
+
+@app.route('/api/transactions/multi', methods=['POST'])
+@require_api_key
+def create_multi_party_transaction():
+    data = request.json
+    if not data or 'parties' not in data or 'amount' not in data or 'description' not in data:
+        return jsonify({"status": "failed", "message": "Missing required fields"}), 400
+    
+    result = midpay.create_multi_party_transaction(data['parties'], float(data['amount']), data['description'])
+    return jsonify(result)
+
+@app.route('/api/keys', methods=['GET'])
+@require_api_key
+def list_api_keys():
+    return jsonify({"status": "success", "keys": midpay.get_api_keys()})
+
+@app.route('/api/keys/revoke', methods=['POST'])
+@require_api_key
+def revoke_api_key():
+    data = request.json
+    if not data or 'key' not in data:
+        return jsonify({"status": "failed", "message": "Missing key to revoke"}), 400
+    
+    result = midpay.revoke_api_key(data['key'])
+    return jsonify(result)
+
+@app.route('/api/transactions/scheduled', methods=['POST'])
+@require_api_key
+def schedule_transaction():
+    data = request.json
+    if not data or 'amount' not in data or 'description' not in data or 'execute_at' not in data:
+        return jsonify({"status": "failed", "message": "Missing required fields"}), 400
+    
+    result = midpay.schedule_transaction(float(data['amount']), data['description'], data['execute_at'])
+    return jsonify(result)
+
+@app.route('/api/analytics/volume', methods=['GET'])
+@require_api_key
+def get_transaction_volume():
+    period = request.args.get('period', 'month')
+    result = midpay.get_transaction_volume(period)
+    return jsonify(result)
+
+@app.route('/api/analytics/user/<user_id>', methods=['GET'])
+@require_api_key
+def get_user_analytics(user_id):
+    result = midpay.get_user_analytics(user_id)
     return jsonify(result)
 
 if __name__ == '__main__':
