@@ -2,3 +2,5 @@ requests
 cryptography
 flask
 flask-cors
+fastapi
+uvicorn

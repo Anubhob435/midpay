@@ -401,4 +401,4 @@ def profile():
                            user_role=session.get('user_role', ''))
 
 if __name__ == '__main__':
-    app.run(debug=True, port=8000)  # Using port 8000 to avoid conflict with the API
+    app.run(debug=True, port=5000)  # Using port 8000 to avoid conflict with the API
