@@ -5,10 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MidPay - Register</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-    <div class="container">
-        <h1>MidPay Registration</h1>
+    <div class="register-container">
+        <div class="register-logo">
+            <h1>Mid<span>Pay</span></h1>
+            <p>Create your account to get started</p>
+        </div>
         
         <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -21,49 +26,72 @@
             {% endif %}
         {% endwith %}
         
-        <div class="card">
+        <div class="register-card">
             <form action="{{ url_for('register') }}" method="POST">
-                <div class="form-group">
-                    <label for="username">Username:</label>
-                    <input type="text" id="username" name="username" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="username"><i class="fas fa-user"></i> Username</label>
+                        <input type="text" id="username" name="username" class="form-control" required autocomplete="username" placeholder="Choose a username">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="name"><i class="fas fa-id-card"></i> Full Name</label>
+                        <input type="text" id="name" name="name" class="form-control" required placeholder="Your full name">
+                    </div>
                 </div>
                 
                 <div class="form-group">
-                    <label for="name">Full Name:</label>
-                    <input type="text" id="name" name="name" required>
+                    <label for="email"><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" id="email" name="email" class="form-control" required autocomplete="email" placeholder="Your email address">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="password"><i class="fas fa-lock"></i> Password</label>
+                        <input type="password" id="password" name="password" class="form-control" required autocomplete="new-password" placeholder="Create a password">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirm_password"><i class="fas fa-check-circle"></i> Confirm Password</label>
+                        <input type="password" id="confirm_password" name="confirm_password" class="form-control" required autocomplete="new-password" placeholder="Confirm your password">
+                    </div>
                 </div>
                 
                 <div class="form-group">
-                    <label for="email">Email:</label>
-                    <input type="email" id="email" name="email" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="password">Password:</label>
-                    <input type="password" id="password" name="password" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="confirm_password">Confirm Password:</label>
-                    <input type="password" id="confirm_password" name="confirm_password" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="role">Role:</label>
-                    <select id="role" name="role" required>
-                        <option value="">Select a role</option>
+                    <label for="role"><i class="fas fa-user-tag"></i> Account Type</label>
+                    <select id="role" name="role" class="form-control" required>
+                        <option value="">Select your account type</option>
                         <option value="A">A - Service Requester</option>
                         <option value="B">B - Service Provider</option>
                     </select>
+                    <div class="role-info">
+                        A: Request and pay for services | B: Provide services and receive payment
+                    </div>
                 </div>
                 
-                <button type="submit" class="btn btn-primary">Register</button>
+                <button type="submit" class="btn-register">Create Account</button>
             </form>
             
-            <div class="login-link">
+            <div class="register-footer">
                 <p>Already have an account? <a href="{{ url_for('login_page') }}">Login here</a></p>
             </div>
         </div>
     </div>
+
+    <script>
+        // Simple password validation feedback
+        document.getElementById('confirm_password').addEventListener('input', function() {
+            const password = document.getElementById('password').value;
+            const confirmPassword = this.value;
+            
+            if (password && confirmPassword) {
+                if (password === confirmPassword) {
+                    this.style.borderColor = '#2ecc71';
+                } else {
+                    this.style.borderColor = '#e74c3c';
+                }
+            }
+        });
+    </script>
 </body>
 </html>
