@@ -10,7 +10,7 @@ MidPay is a simulation of an escrow payment system that facilitates secure trans
 - **Transaction Management**: Create, complete, confirm, and cancel transactions
 - **Account Tracking**: Monitor balances for both parties and the escrow account
 - **Transaction History**: Blockchain-verified transaction history
-- **REST API**: HTTP interface for integrating with web and mobile applications
+- **REST API**: HTTP interface built with FastAPI for integrating with web and mobile applications
 
 ## Blockchain Implementation
 
@@ -48,7 +48,7 @@ MidPay is a simulation of an escrow payment system that facilitates secure trans
 
    **API Server Mode**:
    ```
-   python api.py
+   uvicorn fast_api:app --reload
    ```
 
 ## CLI Mode Usage
@@ -66,34 +66,35 @@ The simulation offers a menu-driven interface with the following options:
 
 ## API Mode Usage
 
-Start the API server with `python api.py` and access it at `http://localhost:5000/api`.
+Start the API server with `uvicorn fast_api:app --reload` and access it at `http://127.0.0.1:8000`. Interactive API documentation (Swagger UI) is available at `http://127.0.0.1:8000/docs`.
 
 ### Example API Requests
 
 **1. Create a new transaction:**
 ```bash
-curl -X POST http://localhost:5000/api/transactions \
+curl -X POST http://127.0.0.1:8000/api/transactions \
   -H "Content-Type: application/json" \
+  -H "X-API-Key: YOUR_API_KEY" \
   -d '{"amount": 50.0, "description": "Logo design"}'
 ```
 
 **2. Check transaction status:**
 ```bash
-curl http://localhost:5000/api/transactions/1743078373
+curl -H "X-API-Key: YOUR_API_KEY" http://127.0.0.1:8000/api/transactions/YOUR_TRANSACTION_ID
 ```
 
 **3. Mark transaction as completed:**
 ```bash
-curl -X PUT http://localhost:5000/api/transactions/1743078373/complete
+curl -X PUT -H "X-API-Key: YOUR_API_KEY" http://127.0.0.1:8000/api/transactions/YOUR_TRANSACTION_ID/complete
 ```
 
-See [API_DOCS.md](API_DOCS.md) for complete API documentation.
+Interactive API documentation is available at `/docs` (Swagger UI) and `/redoc` (ReDoc) when the FastAPI server is running. For a static overview, see [API_DOCS.md](API_DOCS.md).
 
 ## File Structure
 
 - `midpay.py`: Main application with the MidPay class and CLI interface
 - `blockchain.py`: Blockchain implementation with digital signatures
-- `api.py`: REST API implementation using Flask
+- `fast_api.py`: REST API implementation using FastAPI
 - `requirements.txt`: Dependencies for the project
 - `A_bank.json`: Stores Party A's account balance and transaction history
 - `B_bank.json`: Stores Party B's account balance and transaction history
@@ -112,8 +113,9 @@ MidPay consists of several components working together:
    - Handles digital signatures for transaction verification
    - Provides immutable transaction history
 
-3. **REST API** (`api.py`):
-   - Exposes system functionality via HTTP endpoints
+3. **REST API** (`fast_api.py`):
+   - Exposes system functionality via HTTP endpoints using FastAPI
+   - Provides auto-generated interactive documentation (Swagger UI at `/docs`, ReDoc at `/redoc`)
    - Enables integration with external applications
 
 ## Security Notes
