@@ -5,3 +5,5 @@ flask-cors
 fastapi
 uvicorn
 gunicorn
+pymongo
+python-dotenv

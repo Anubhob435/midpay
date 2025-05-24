@@ -5,26 +5,50 @@ import json
 import os
 import hashlib  # For password hashing in the future
 from generate_api_key import generate_api_key, save_api_key  # Import API key generation functions
+from pymongo import MongoClient
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 
+# MongoDB connection
+MONGODB_URI = os.getenv('MONGODB_URI')
+client = MongoClient(MONGODB_URI)
+db = client['Midpay']
+users_collection = db['users']
+
 # Initialize MidPay instance
 midpay = MidPay()
 
-def load_users():
-    """Load user data from users.json"""
+def get_user_by_username(username):
+    """Get user data from MongoDB by username"""
     try:
-        with open('users.json', 'r') as f:
-            return json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        # Return empty user list if file doesn't exist or is invalid
-        return {"users": []}
+        user = users_collection.find_one({"username": username})
+        return user
+    except Exception as e:
+        print(f"Error fetching user: {e}")
+        return None
 
-def save_users(user_data):
-    """Save user data to users.json"""
-    with open('users.json', 'w') as f:
-        json.dump(user_data, f, indent=2)
+def create_user(user_data):
+    """Save user data to MongoDB"""
+    try:
+        result = users_collection.insert_one(user_data)
+        return result.inserted_id
+    except Exception as e:
+        print(f"Error creating user: {e}")
+        return None
+
+def user_exists(username):
+    """Check if a user exists in MongoDB"""
+    try:
+        user = users_collection.find_one({"username": username})
+        return user is not None
+    except Exception as e:
+        print(f"Error checking user existence: {e}")
+        return False
 
 @app.route('/')
 def index():
@@ -105,11 +129,8 @@ def login():
         flash('Please provide both username and password', 'error')
         return redirect(url_for('login_page'))
     
-    # Load users from JSON file
-    user_data = load_users()
-    
-    # Find the user
-    user = next((u for u in user_data['users'] if u['username'] == username), None)
+    # Get user from MongoDB
+    user = get_user_by_username(username)
     
     if user and user['password'] == password:  # In production, use proper password hashing
         # Store user info in session
@@ -152,16 +173,12 @@ def register():
     if password != confirm_password:
         flash('Passwords do not match', 'error')
         return redirect(url_for('register_page'))
-    
-    if role not in ['A', 'B']:
-        flash('Invalid role selected', 'error')
-        return redirect(url_for('register_page'))
-    
-    # Load existing users
-    user_data = load_users()
+        if role not in ['A', 'B']:
+            flash('Invalid role selected', 'error')
+            return redirect(url_for('register_page'))
     
     # Check if username already exists
-    if any(u['username'] == username for u in user_data['users']):
+    if user_exists(username):
         flash('Username already exists', 'error')
         return redirect(url_for('register_page'))
     
@@ -174,12 +191,14 @@ def register():
         'name': name
     }
     
-    user_data['users'].append(new_user)
+    # Save user to MongoDB
+    user_id = create_user(new_user)
     
-    # Save updated user data
-    save_users(user_data)
+    if user_id:
+        flash('Registration successful! You can now login.', 'success')
+    else:
+        flash('Registration failed. Please try again.', 'error')
     
-    flash('Registration successful! You can now login.', 'success')
     return redirect(url_for('login_page'))
 
 @app.route('/create_transaction', methods=['POST'])
@@ -351,9 +370,8 @@ def profile():
         flash('Please login to view your profile', 'info')
         return redirect(url_for('login_page'))
     
-    # Load user data
-    user_data = load_users()
-    current_user = next((u for u in user_data['users'] if u['username'] == session['username']), None)
+    # Get user data from MongoDB
+    current_user = get_user_by_username(session['username'])
     
     if not current_user:
         flash('User data not found', 'error')
