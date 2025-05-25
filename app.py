@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = secrets.token_hex(16)
+app.secret_key = secrets.token_hex(16) 
 
 # MongoDB connection
 MONGODB_URI = os.getenv('MONGODB_URI')
