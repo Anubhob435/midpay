@@ -5,6 +5,12 @@ from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from midpay import MidPay
 import json
+import os
+from pymongo import MongoClient
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 app = FastAPI(
     title="MidPay API",
@@ -20,6 +26,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# MongoDB connection
+MONGODB_URI = os.getenv('MONGODB_URI')
+mongo_client = MongoClient(MONGODB_URI)
+db = mongo_client['Midpay']
+valid_keys_collection = db['validKeys']
+
 midpay = MidPay()
 
 # Dependency for API key validation
@@ -27,11 +39,14 @@ def validate_api_key(x_api_key: Optional[str] = Header(None)):
     if not x_api_key:
         raise HTTPException(status_code=401, detail="Invalid or missing API key")
     try:
-        with open('validkeys.json', 'r') as file:
-            valid_keys = json.load(file)
-            if x_api_key not in valid_keys:
-                raise HTTPException(status_code=401, detail="Invalid or missing API key")
-    except Exception:
+        # Check if API key exists in MongoDB and is active
+        key_document = valid_keys_collection.find_one({
+            "api_key": x_api_key, 
+            "active": True
+        })
+        if not key_document:
+            raise HTTPException(status_code=401, detail="Invalid or missing API key")
+    except Exception as e:
         raise HTTPException(status_code=401, detail="Invalid or missing API key")
 
 # Pydantic models
@@ -59,6 +74,9 @@ class MultiPartyTransactionCreate(BaseModel):
 
 class RevokeKey(BaseModel):
     key: str
+
+class CreateAPIKey(BaseModel):
+    email: str
 
 class ScheduledTransactionCreate(BaseModel):
     amount: float
@@ -162,12 +180,61 @@ async def create_multi_party_transaction(data: MultiPartyTransactionCreate, _: A
 
 @app.get("/api/keys")
 async def list_api_keys(_: Any = Depends(validate_api_key)):
-    return {"status": "success", "keys": midpay.get_api_keys()}
+    """List all active API keys (masked for security)"""
+    try:
+        keys = list(valid_keys_collection.find({"active": True}, {"api_key": 1, "email": 1}))
+        masked_keys = ["****" + key["api_key"][-6:] for key in keys]
+        return {
+            "status": "success", 
+            "keys": {
+                "count": len(keys),
+                "keys": masked_keys
+            }
+        }
+    except Exception as e:
+        return {"status": "failed", "message": f"Error fetching API keys: {str(e)}"}
+
+@app.post("/api/keys/create")
+async def create_api_key(data: CreateAPIKey, _: Any = Depends(validate_api_key)):
+    """Create a new API key for an email"""
+    try:
+        from generate_api_key import generate_api_key
+        new_key = generate_api_key()
+        
+        # Insert into MongoDB
+        result = valid_keys_collection.insert_one({
+            "api_key": new_key,
+            "email": data.email,
+            "active": True,
+            "created_at": None  # You can add datetime.utcnow() if needed
+        })
+        
+        if result.inserted_id:
+            return {
+                "status": "success", 
+                "message": "API key created successfully",
+                "api_key": new_key
+            }
+        else:
+            return {"status": "failed", "message": "Failed to create API key"}
+    except Exception as e:
+        return {"status": "failed", "message": f"Error creating API key: {str(e)}"}
 
 @app.post("/api/keys/revoke")
 async def revoke_api_key(data: RevokeKey, _: Any = Depends(validate_api_key)):
-    result = midpay.revoke_api_key(data.key)
-    return result
+    """Revoke an API key"""
+    try:
+        result = valid_keys_collection.update_one(
+            {"api_key": data.key},
+            {"$set": {"active": False}}
+        )
+        
+        if result.matched_count > 0:
+            return {"status": "success", "message": "API key revoked successfully"}
+        else:
+            return {"status": "failed", "message": "API key not found"}
+    except Exception as e:
+        return {"status": "failed", "message": f"Error revoking API key: {str(e)}"}
 
 @app.post("/api/transactions/scheduled")
 async def schedule_transaction(data: ScheduledTransactionCreate, _: Any = Depends(validate_api_key)):

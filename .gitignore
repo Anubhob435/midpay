@@ -3,3 +3,7 @@ vaildkeys.json
 .env
 .gitignore
 venv
+migrate_users.py
+test_connection.py
+migrate_valid_keys.py
+test_mongodb_keys.py
