@@ -5,14 +5,8 @@
         "src": "app.py",
         "use": "@vercel/python",
         "config": {
-          "buildCommand": "chmod +x build.sh && ./build.sh"
+          "buildCommand": "python init_app.py"
         }
-      }
-    ],
-    "routes": [
-      {
-        "src": "/(.*)",
-        "dest": "/app.py"
       }
     ],
     "headers": [
@@ -22,10 +16,6 @@
           {
             "key": "Cache-Control",
             "value": "public, max-age=0, must-revalidate"
-          },
-          {
-            "key": "Set-Cookie",
-            "value": "Path=/; HttpOnly; SameSite=Strict"
           }
         ]
       }
