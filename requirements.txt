@@ -2,6 +2,7 @@ requests
 cryptography
 flask
 flask-cors
+flask-session
 fastapi
 uvicorn
 gunicorn
@@ -9,3 +10,4 @@ pymongo
 python-dotenv
 psycopg2-binary
 sqlalchemy
+redis

@@ -7,12 +7,37 @@ import hashlib  # For password hashing in the future
 from generate_api_key import generate_api_key, save_api_key  # Import API key generation functions
 from pymongo import MongoClient
 from dotenv import load_dotenv
+try:
+    from flask_session import Session  # Enhanced session handling
+except ImportError:
+    Session = None  # Will handle this case later in the code
 
 # Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = secrets.token_hex(16) 
+# Use a fixed secret key or load from environment variable
+app.secret_key = os.getenv('SECRET_KEY', 'midpay-secure-fixed-secret-key-2025')
+# Configure session for better compatibility with serverless environments
+app.config['SESSION_PERMANENT'] = True
+app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours in seconds
+
+# Use Flask-Session if available - falls back to Flask's default session
+if Session:
+    # Determine if we're in production (Vercel) or development
+    if os.getenv('VERCEL_ENV') == 'production':
+        # In Vercel, use Redis if available, else cookie-based sessions
+        redis_url = os.getenv('REDIS_URL')
+        if redis_url:
+            app.config['SESSION_TYPE'] = 'redis'
+            app.config['SESSION_REDIS'] = redis_url
+        else:
+            app.config['SESSION_TYPE'] = 'cookie'
+    else:
+        # In development, use filesystem sessions
+        app.config['SESSION_TYPE'] = 'filesystem'
+    
+    Session(app)
 
 # MongoDB connection
 MONGODB_URI = os.getenv('MONGODB_URI')
@@ -22,6 +47,15 @@ users_collection = db['users']
 
 # Initialize MidPay instance
 midpay = MidPay()
+
+@app.before_request
+def check_session_health():
+    """Check and maintain session health before each request"""
+    # If the user claims to be logged in but essential session data is missing
+    if session.get('logged_in') and not session.get('username'):
+        # Session is corrupted, clear it
+        session.clear()
+        flash('Your session was invalid. Please login again.', 'warning')
 
 def get_user_by_username(username):
     """Get user data from MongoDB by username"""
@@ -134,10 +168,17 @@ def login():
     
     if user and user['password'] == password:  # In production, use proper password hashing
         # Store user info in session
+        session.clear()  # Clear any existing session data
+        session.permanent = True  # Make the session persistent
         session['username'] = user['username']
         session['user_role'] = user['role']
         session['name'] = user['name']
         session['email'] = user['email']
+        session['logged_in'] = True
+        session['user_id'] = str(user.get('_id', ''))
+        
+        # Force session to be saved immediately
+        session.modified = True
         
         flash(f'Welcome back, {user["name"]}!', 'success')
         return redirect(url_for('dashboard'))
@@ -147,8 +188,14 @@ def login():
 
 @app.route('/logout')
 def logout():
-    # Clear the session
-    session.clear()
+    # Clear the session with better cleanup
+    session.pop('username', None)
+    session.pop('user_role', None)
+    session.pop('name', None)
+    session.pop('email', None)
+    session.pop('logged_in', None)
+    session.pop('user_id', None)
+    session.clear()  # Finally clear everything
     flash('You have been logged out', 'info')
     return redirect(url_for('index'))
 
@@ -365,17 +412,20 @@ def get_api_key():
 @app.route('/profile')
 def profile():
     """Render user profile page with all user-related data"""
-    # Check if user is logged in
-    if 'username' not in session:
-        flash('Please login to view your profile', 'info')
+    # Enhanced session check
+    if not session.get('logged_in') or not session.get('username'):
+        # Log debugging info
+        print(f"Session login failed. Session contains: {list(session.keys())}")
+        flash('Your session has expired. Please login again to view your profile', 'info')
         return redirect(url_for('login_page'))
     
     # Get user data from MongoDB
     current_user = get_user_by_username(session['username'])
     
     if not current_user:
-        flash('User data not found', 'error')
-        return redirect(url_for('dashboard'))
+        flash('User data not found. Please login again.', 'error')
+        session.clear()  # Clear invalid session
+        return redirect(url_for('login_page'))
     
     # Get user transactions
     user_transactions = []
@@ -417,6 +467,40 @@ def profile():
                            username=session.get('username', ''),
                            name=session.get('name', ''),
                            user_role=session.get('user_role', ''))
+
+@app.route('/verify-session')
+def verify_session():
+    """Debug route to verify session is working correctly"""
+    if 'username' not in session:
+        return {
+            "status": "not_logged_in",
+            "session_keys": list(session.keys()),
+            "message": "You are not logged in"
+        }
+    
+    return {
+        "status": "logged_in",
+        "session_data": {
+            "username": session.get('username'),
+            "name": session.get('name'),
+            "user_role": session.get('user_role'),
+            "logged_in": session.get('logged_in', False)
+        },
+        "session_keys": list(session.keys()),
+        "message": "Your session is valid"
+    }
+
+@app.errorhandler(401)
+def unauthorized(error):
+    """Handle unauthorized access attempts"""
+    flash('You need to be logged in to access that page', 'warning')
+    return redirect(url_for('login_page'))
+
+@app.errorhandler(404)
+def page_not_found(error):
+    """Handle 404 errors"""
+    flash('The page you requested was not found', 'warning')
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)  # Using port 8000 to avoid conflict with the API
