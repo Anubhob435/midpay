@@ -36,3 +36,4 @@ Added the following packages to requirements.txt:
 1. Setup Redis for production (optional)
 2. Monitor session behavior on Vercel
 3. Consider implementing more robust auth like JWT if session issues persist
+##
