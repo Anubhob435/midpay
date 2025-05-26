@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MidPay - API Documentation</title>
-    <link rel="icon" href="{{ url_for('static', filename='images/midpay-icon.ico') }}" type="image/x-icon">    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='images/midpay-icon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/api_documentation.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="{{ url_for('static', filename='js/session_fixes.js') }}"></script>
     <style>
         /* API Documentation specific styles */
         .api-section {
@@ -228,8 +228,9 @@
                 <li><a href="/#usage">How It Works</a></li>
                 <li><a href="/api-docs" class="active">API</a></li>
                 <li><a href="/#contact">Contact</a></li>                {% if username %}
-                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>                <li class="user-info">
-                    <span><i class="fas fa-user"></i> <a href="/profile" class="user-profile-link">{{ name }}</a> ({{ user_role }})</span>
+                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li class="user-info">
+                    <span><i class="fas fa-user"></i> <a href="{{ url_for('profile') }}" class="user-profile-link">{{ name }}</a> ({{ user_role }})</span>
                     <a href="{{ url_for('logout') }}" class="btn btn-sm">Logout</a>
                 </li>
                 {% else %}

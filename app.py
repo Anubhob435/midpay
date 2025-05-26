@@ -24,18 +24,20 @@ app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours in seconds
 
 # Use Flask-Session if available - falls back to Flask's default session
 if Session:
-    # Use cookie-based sessions for Vercel deployment
-    app.config['SESSION_TYPE'] = 'cookie'
-    app.config['SESSION_COOKIE_SECURE'] = True if os.getenv('VERCEL_ENV') == 'production' else False
-    app.config['SESSION_COOKIE_HTTPONLY'] = True
-    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    # Determine if we're in production (Vercel) or development
+    if os.getenv('VERCEL_ENV') == 'production':
+        # In Vercel, use Redis if available, else cookie-based sessions
+        redis_url = os.getenv('REDIS_URL')
+        if redis_url:
+            app.config['SESSION_TYPE'] = 'redis'
+            app.config['SESSION_REDIS'] = redis_url
+        else:
+            app.config['SESSION_TYPE'] = 'cookie'
+    else:
+        # In development, use filesystem sessions
+        app.config['SESSION_TYPE'] = 'filesystem'
     
     Session(app)
-else:
-    # Fallback to default Flask sessions with better configuration
-    app.config['SESSION_COOKIE_SECURE'] = True if os.getenv('VERCEL_ENV') == 'production' else False
-    app.config['SESSION_COOKIE_HTTPONLY'] = True
-    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 # MongoDB connection
 MONGODB_URI = os.getenv('MONGODB_URI')
@@ -45,15 +47,6 @@ users_collection = db['users']
 
 # Initialize MidPay instance
 midpay = MidPay()
-
-@app.before_request
-def check_session_health():
-    """Check and maintain session health before each request"""
-    # If the user claims to be logged in but essential session data is missing
-    if session.get('logged_in') and not session.get('username'):
-        # Session is corrupted, clear it
-        session.clear()
-        flash('Your session was invalid. Please login again.', 'warning')
 
 def get_user_by_username(username):
     """Get user data from MongoDB by username"""
@@ -465,49 +458,6 @@ def profile():
                            username=session.get('username', ''),
                            name=session.get('name', ''),
                            user_role=session.get('user_role', ''))
-
-@app.route('/verify-session')
-def verify_session():
-    """Debug route to verify session is working correctly"""
-    if 'username' not in session:
-        return {
-            "status": "not_logged_in",
-            "session_keys": list(session.keys()),
-            "message": "You are not logged in"
-        }
-    
-    return {
-        "status": "logged_in",
-        "session_data": {
-            "username": session.get('username'),
-            "name": session.get('name'),
-            "user_role": session.get('user_role'),
-            "logged_in": session.get('logged_in', False)
-        },
-        "session_keys": list(session.keys()),
-        "message": "Your session is valid"
-    }
-
-@app.route('/health')
-def health_check():
-    """Simple health check endpoint for Vercel"""
-    return {
-        "status": "healthy",
-        "message": "MidPay API is running",
-        "session_active": 'username' in session
-    }
-
-@app.errorhandler(401)
-def unauthorized(error):
-    """Handle unauthorized access attempts"""
-    flash('You need to be logged in to access that page', 'warning')
-    return redirect(url_for('login_page'))
-
-@app.errorhandler(404)
-def page_not_found(error):
-    """Handle 404 errors"""
-    flash('The page you requested was not found', 'warning')
-    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)  # Using port 8000 to avoid conflict with the API
