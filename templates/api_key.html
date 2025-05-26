@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your MidPay API Key</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/midpay-icon.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -78,17 +79,17 @@
     <header>
         <nav class="navbar">
             <div class="logo">
-                <h1><i class="fas fa-handshake"></i> MidPay</h1>
+                <a href="/"><img src="{{ url_for('static', filename='images/midpay-logo.png') }}" alt="MidPay Logo" height="40"></a>
             </div>
             <ul class="nav-links">
+                <li><a href="/">Home</a></li>
                 <li><a href="{{ url_for('index') }}#about">About</a></li>
                 <li><a href="{{ url_for('index') }}#usage">How It Works</a></li>
                 <li><a href="{{ url_for('api_docs') }}">API</a></li>
                 <li><a href="{{ url_for('index') }}#contact">Contact</a></li>
                 {% if username %}
-                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-                <li class="user-info">
-                    <span><i class="fas fa-user"></i> {{ name }} ({{ user_role }})</span>
+                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>                <li class="user-info">
+                    <span><i class="fas fa-user"></i> <a href="{{ url_for('profile') }}" class="user-profile-link">{{ name }}</a> ({{ user_role }})</span>
                     <a href="{{ url_for('logout') }}" class="btn btn-sm">Logout</a>
                 </li>
                 {% else %}

@@ -4,24 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MidPay - Secure Escrow Payment System</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/midpay-icon.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-    <header>
-        <nav class="navbar">
+    <header>        <nav class="navbar">
             <div class="logo">
-                <h1><i class="fas fa-handshake"></i> MidPay</h1>
+                <a href="/"><img src="{{ url_for('static', filename='images/midpay-logo.png') }}" alt="MidPay Logo" height="40"></a>
             </div>
             <ul class="nav-links">
-                <li><a href="#about">About</a></li>
-                <li><a href="#usage">How It Works</a></li>
-                <li><a href="{{ url_for('api_docs') }}">API</a></li>
-                <li><a href="#contact">Contact</a></li>
+                <li><a href="/">Home</a></li>
+                <li><a href="/#about">About</a></li>
+                <li><a href="/#usage">How It Works</a></li>
+                <li><a href="/api-docs" class="active">API</a></li>
+                <li><a href="/#contact">Contact</a></li>
                 {% if username %}
-                <li><a href="{{ url_for('profile') }}">Profile</a></li>
+                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
                 <li class="user-info">
-                    <span><i class="fas fa-user"></i> {{ name }} ({{ user_role }})</span>
+                    <span><i class="fas fa-user"></i> <a href="{{ url_for('profile') }}" class="user-profile-link">{{ name }}</a> ({{ user_role }})</span>
                     <a href="{{ url_for('logout') }}" class="btn btn-sm">Logout</a>
                 </li>
                 {% else %}
@@ -47,7 +48,7 @@
 
         <section class="hero">
             <div class="hero-content" style="position: relative; z-index: 2; color: white; text-shadow: 1px 1px 3px rgba(0,0,0,0.7);">
-                <h1>Secure Transactions with Blockchain Technology</h1>
+                <h1>Secure Any Type of Transactions with Blockchain Technology</h1>
                 <p>MidPay ensures safe transactions between parties with escrow protection and blockchain verification</p>
                 {% if not username %}
                 <a href="{{ url_for('login_page') }}" class="btn btn-primary" id="get-started-btn">Get Started</a>

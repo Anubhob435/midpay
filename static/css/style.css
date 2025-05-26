@@ -132,6 +132,18 @@ header {
     color: var(--primary-color);
 }
 
+.user-info .user-profile-link {
+    text-decoration: none;
+    color: var(--primary-color);
+    font-weight: 600;
+    transition: color 0.3s;
+}
+
+.user-info .user-profile-link:hover {
+    color: var(--secondary-color);
+    text-decoration: underline;
+}
+
 /* Hero Section */
 .hero {
     background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('../images/background.jpeg') center/cover no-repeat;
