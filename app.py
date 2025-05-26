@@ -24,20 +24,18 @@ app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours in seconds
 
 # Use Flask-Session if available - falls back to Flask's default session
 if Session:
-    # Determine if we're in production (Vercel) or development
-    if os.getenv('VERCEL_ENV') == 'production':
-        # In Vercel, use Redis if available, else cookie-based sessions
-        redis_url = os.getenv('REDIS_URL')
-        if redis_url:
-            app.config['SESSION_TYPE'] = 'redis'
-            app.config['SESSION_REDIS'] = redis_url
-        else:
-            app.config['SESSION_TYPE'] = 'cookie'
-    else:
-        # In development, use filesystem sessions
-        app.config['SESSION_TYPE'] = 'filesystem'
+    # Use cookie-based sessions for Vercel deployment
+    app.config['SESSION_TYPE'] = 'cookie'
+    app.config['SESSION_COOKIE_SECURE'] = True if os.getenv('VERCEL_ENV') == 'production' else False
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
     
     Session(app)
+else:
+    # Fallback to default Flask sessions with better configuration
+    app.config['SESSION_COOKIE_SECURE'] = True if os.getenv('VERCEL_ENV') == 'production' else False
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 # MongoDB connection
 MONGODB_URI = os.getenv('MONGODB_URI')
@@ -488,6 +486,15 @@ def verify_session():
         },
         "session_keys": list(session.keys()),
         "message": "Your session is valid"
+    }
+
+@app.route('/health')
+def health_check():
+    """Simple health check endpoint for Vercel"""
+    return {
+        "status": "healthy",
+        "message": "MidPay API is running",
+        "session_active": 'username' in session
     }
 
 @app.errorhandler(401)

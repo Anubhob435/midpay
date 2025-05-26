@@ -2,22 +2,14 @@
     "version": 2,
     "builds": [
       {
-        "src": "app.py",
-        "use": "@vercel/python",
-        "config": {
-          "buildCommand": "python init_app.py"
-        }
+        "src": "api/index.py",
+        "use": "@vercel/python"
       }
     ],
-    "headers": [
+    "rewrites": [
       {
         "source": "/(.*)",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "public, max-age=0, must-revalidate"
-          }
-        ]
+        "destination": "/api/index.py"
       }
     ]
   }
